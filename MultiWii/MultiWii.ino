@@ -26,7 +26,7 @@
 ----------------------------------------------------------------
 Modification done by Olivier FERNANDEZ wareck@gmail.com:
 ----------------------------------------------------------------
-
+-code merged to Multiwii v2.4
 -DroflyV2 and DroflyV3 boards integration
 -code integration for SDCARD and corrective patch for datalogger
 -corrective patch for variometer error
