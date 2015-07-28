@@ -40,6 +40,7 @@ Modification done by Olivier FERNANDEZ wareck@gmail.com:
 -Allow 6 position switch for AUX
 -French conversion for some compilation error code
 -Add restriction volume Fly RTH function (thanks to the wadudu Team !)
+-Add Generic pulse Sonar support (SR04)
 
 
 ----------------------------------------------------------------
@@ -59,6 +60,8 @@ Modification apportées par Olivier FERNANDEZ wareck@gmail.com
 -Utilisation possible d'inter 6 poisitions pour les voies AUX
 -Traduction en français des messages d'aletre lors de la compilation
 -Ajout de la fonction RTH en cas de depassement de la zone de vol (merci la team ! )
+-Ajout du support des Sonar Generic (SR04) 
+
 */
 					 
 
