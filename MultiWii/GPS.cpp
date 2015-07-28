@@ -135,7 +135,7 @@ void reset_PID(struct PID_* pid) {
 
 uint8_t land_detect;                 //Detect land (extern)
 static uint32_t land_settle_timer;
-uint8_t GPS_Frame;            // a valid GPS_Frame was detected, and data is ready for nav computation
+//uint8_t GPS_Frame;            // a valid GPS_Frame was detected, and data is ready for nav computation
 
 static float  dTnav;            // Delta Time in milliseconds for navigation computations, updated with every good GPS read
 static int16_t actual_speed[2] = {0,0};
