@@ -1,11 +1,11 @@
-## Mutliwii 2.3 + GPS NAV 
+## Mutliwii 2.4 + GPS NAV 
 ### Drotek Drofly V3 support
-### Code version 1.4 (final version)
-### Code based on Multiwii 2.3 + Nav b7 (eosbandi)
+### Code version 1.5 
+### Code based on Multiwii 2.4
 ===============================
 
 _**features added by Wareck (wareck@gmail.com):**_
-
+- Code merged to Multiwii v2.4
 - DroflyV2 and DroflyV3 boards integration
 - code integration for SDCARD and corrective patch for datalogger
 - corrective patch for variometer error
@@ -21,6 +21,7 @@ _**features added by Wareck (wareck@gmail.com):**_
 -Add restriction volume Fly RTH function (thanks to the wadudu Team !)
 
 _**Améliorations apportées par Wareck (wareck@gmail.com):**_
+- adaptation du code à la version Multiwii 2.4
 - intégration des cartes DroflyV2 et DroflyV3
 - Intégration du support SDCARD et correction de quelques bugs du datalogger
 - Correction d'un bug du variomètre
