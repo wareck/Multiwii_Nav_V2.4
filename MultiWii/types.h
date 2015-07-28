@@ -83,6 +83,9 @@ enum box {
     BOXGPSNAV,
     BOXLAND,
   #endif
+  #if SONAR
+	BOXSONAR,
+  #endif
   CHECKBOXITEMS
 };
 
@@ -145,6 +148,16 @@ typedef struct {
   uint8_t GPS_head_set: 1;           // it is 1 if the navigation engine got commands to control heading (SET_POI or SET_HEAD) CLEAR_HEAD will zero it
   uint8_t LAND_COMPLETED: 1;
   uint8_t LAND_IN_PROGRESS: 1;
+#endif
+ #if SONAR
+  uint8_t SONAR_MODE : 1;
+#endif
+
+#ifdef MWI_SDCARD //SDCARD
+  uint8_t SDCARD : 1;
+#endif
+#if defined(VOLUME_FLIGHT) || defined(VOLUME_S1) || defined(VOLUME_S2) || defined(VOLUME_S3)
+	  uint8_t VOLUME_MODE : 1;
 #endif
 } flags_struct_t;
 
@@ -332,5 +345,15 @@ typedef struct {
 } gps_conf_struct;
 
 #endif
+ 
+#ifdef PCF8591 
+	 typedef struct {
+	 uint8_t adc0;
+	 uint8_t adc1;
+	 uint8_t adc2;
+	 uint8_t adc3;
+	 } pcf8591_t;
+#endif /* PCF8591 */ 
+
 
 #endif /* TYPES_H_ */

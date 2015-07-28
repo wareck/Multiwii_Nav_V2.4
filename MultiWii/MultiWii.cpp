@@ -16,6 +16,7 @@ March  2015     V2.4
 #include "types.h"
 #include "MultiWii.h"
 #include "Alarms.h"
+#include "SDcard.h"
 #include "EEPROM.h"
 #include "IMU.h"
 #include "LCD.h"
@@ -96,6 +97,9 @@ const char boxnames[] PROGMEM = // names for dynamic generation of config GUI
   "MISSION;"
   "LAND;"
 #endif
+#if SONAR
+"SONAR;"
+#endif 
   ;
 
 const uint8_t boxids[] PROGMEM = {// permanent IDs associated to boxes. This way, you can rely on an ID number to identify a BOX function.
@@ -151,6 +155,9 @@ const uint8_t boxids[] PROGMEM = {// permanent IDs associated to boxes. This way
   20, //"MISSION;"
   21, //"LAND;"
 #endif
+#if SONAR
+  22, //"SONAR;"
+#endif
   };
 
 
@@ -160,6 +167,9 @@ uint16_t cycleTime = 0;     // this is the number in micro second to achieve a f
 uint16_t calibratingA = 0;  // the calibration is done in the main loop. Calibrating decreases at each cycle down to 0, then we enter in a normal mode.
 uint16_t calibratingB = 0;  // baro calibration = get new ground pressure value
 uint16_t calibratingG;
+#if SONAR
+uint16_t calibratingS = 0;
+#endif
 int16_t  magHold,headFreeModeHold; // [-180;+180]
 uint8_t  vbatMin = VBATNOMINAL;  // lowest battery voltage in 0.1V steps
 uint8_t  rcOptions[CHECKBOXITEMS];
@@ -167,6 +177,14 @@ int32_t  AltHold; // in cm
 int16_t  sonarAlt;
 int16_t  BaroPID = 0;
 int16_t  errorAltitudeI = 0;
+#if defined(VOLUME_FLIGHT) || defined(VOLUME_S1) || defined(VOLUME_S2) || defined(VOLUME_S3)
+uint16_t VolumeAltitudeMax;
+uint16_t VolumeHeightMax;
+#endif
+
+#ifdef PCF8591 
+pcf8591_t pcf8591;
+#endif /* PCF8591 */ 
 
 // **************
 // gyro+acc IMU
@@ -328,6 +346,14 @@ conf_t conf;
   uint16_t GPS_speed;                                   // GPS speed         - unit: cm/s
   uint8_t  GPS_update = 0;                              // a binary toogle to distinct a GPS position update
   uint16_t GPS_ground_course = 0;                       //                   - unit: degree*10
+  uint8_t  GPS_Present = 0;                             // Checksum from Gps serial
+  uint8_t  GPS_Enable  = 0;
+  uint32_t GPS_time;
+  uint8_t  GPS_Frame   = 0;
+#if defined(VOLUME_FLIGHT) || defined(VOLUME_S1) || defined(VOLUME_S2) || defined(VOLUME_S3)
+  uint16_t GPS_distanceToHomeMax;
+  int32_t BAROaltHome;
+#endif
 
   //uint8_t GPS_mode  = GPS_MODE_NONE; // contains the current selected gps flight mode --> moved to the f. structure
   uint8_t NAV_state = 0; // NAV_STATE_NONE;  /// State of the nav engine
@@ -453,6 +479,7 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
       static uint8_t ind = 0;
       static uint16_t vvec[VBAT_SMOOTH], vsum;
       uint16_t v = analogRead(V_BATPIN);
+      //debug[1] = v;
       #if VBAT_SMOOTH == 1
         analog.vbat = (v*VBAT_PRESCALER) / conf.vbatscale + VBAT_OFFSET; // result is Vbatt in 0.1V steps
       #else
@@ -703,6 +730,9 @@ void setup() {
   #endif
   calibratingG = 512;
   calibratingB = 200;  // 10 seconds init_delay + 200 * 25 ms = 15 seconds before ground pressure settles
+#if SONAR
+  calibratingS = 200;
+#endif
   #if defined(POWERMETER)
     for(uint8_t j=0; j<=PMOTOR_SUM; j++) pMeter[j]=0;
   #endif
@@ -736,7 +766,12 @@ void setup() {
   f.SMALL_ANGLES_25=1; // important for gyro only conf
   #ifdef LOG_PERMANENT
     // read last stored set
+#ifndef LOG_PERMANENT_SD_ONLY //SDCARD
     readPLog();
+#endif
+#ifdef MWI_SDCARD //SDCARD
+	readPLogFromSD();
+#endif
     plog.lifetime += plog.armed_time / 1000000;
     plog.start++;         // #powercycle/reset/initialize events
     // dump plog data to terminal
@@ -746,7 +781,60 @@ void setup() {
     plog.armed_time = 0;   // lifetime in seconds
     //plog.running = 0;       // toggle on arm & disarm to monitor for clean shutdown vs. powercut
   #endif
+#ifdef MWI_SDCARD //SDCARD
+	init_SD();
+#endif
+
   #ifdef DEBUGMSG
+#if defined(VOLUME_FLIGHT)
+	VolumeHeightMax = VOLUME_HEIGTH_MAX * 100;
+          #if defined(VOLUME_FLIGHT_RTH)
+          GPS_conf.fence = VOLUME_DISTANCE_MAX;
+          #else
+	GPS_distanceToHomeMax = VOLUME_DISTANCE_MAX;
+          #endif
+	f.VOLUME_MODE = 0;
+	#endif
+	#ifdef VOLUME_S1
+          #if defined(VOLUME_FLIGHT_RTH)
+          GPS_conf.fence = VOLUME_S1_DSTMAX;
+          #else
+		 GPS_distanceToHomeMax = VOLUME_S1_DSTMAX;
+          #endif
+			#if defined(VOLUME_2KG)
+				VolumeHeightMax = VOLUME_HMAX_2KG * 100;
+			#else
+				VolumeHeightMax = VOLUME_HMAX * 100;
+			#endif
+		 f.VOLUME_MODE = 0;
+	#endif
+	#ifdef VOLUME_S2
+          #if defined(VOLUME_FLIGHT_RTH)
+          GPS_conf.fence = VOLUME_S2_DSTMAX;
+          #else
+		 GPS_distanceToHomeMax = VOLUME_S2_DSTMAX;
+          #endif
+		#if defined(VOLUME_2KG)
+		VolumeHeightMax = VOLUME_HMAX_2KG * 100;
+		#else
+		VolumeHeightMax = VOLUME_HMAX * 100;
+		#endif
+		f.VOLUME_MODE = 0;
+	#endif
+	#ifdef VOLUME_S3
+          #if defined(VOLUME_FLIGHT_RTH)
+          GPS_conf.fence = VOLUME_S3_DSTMAX;
+          #else
+		 GPS_distanceToHomeMax = VOLUME_S3_DSTMAX;
+          #endif
+		#if defined(VOLUME_2KG)
+		VolumeHeightMax = VOLUME_HMAX_2KG * 100;
+		#else
+		VolumeHeightMax = VOLUME_HMAX * 100;
+		#endif
+		f.VOLUME_MODE = 0;
+	#endif
+	
     debugmsg_append_str("initialization completed\n");
   #endif
 }
@@ -776,6 +864,9 @@ void go_arm() {
         #if BARO
           calibratingB = 10; // calibrate baro to new ground level (10 * 25 ms = ~250 ms non blocking)
         #endif
+		#if SONAR
+		  calibratingS = 10;
+      #endif
       #endif
       #ifdef LCD_TELEMETRY // reset some values when arming
         #if BARO
@@ -795,7 +886,17 @@ void go_arm() {
         plog.arm++;           // #arm events
         plog.running = 1;       // toggle on arm & disarm to monitor for clean shutdown vs. powercut
         // write now.
+#ifndef LOG_PERMANENT_SD_ONLY //SDCARD
         writePLog();
+#endif
+#ifdef MWI_SDCARD //SDCARD
+		writePLogToSD();
+#endif
+      #endif
+		#if defined(VOLUME_FLIGHT) || defined(VOLUME_S1) || defined(VOLUME_S2) || defined(VOLUME_S3)
+			BAROaltHome = alt.EstAlt;
+			VolumeAltitudeMax = BAROaltHome + VolumeHeightMax;
+			f.VOLUME_MODE = 0;
       #endif
     }
   } else if(!f.ARMED) { 
@@ -813,7 +914,17 @@ void go_disarm() {
       if (i2c_errors_count > 10) plog.i2c++;           // #i2c errs @ disarm
       plog.running = 0;       // toggle @ arm & disarm to monitor for clean shutdown vs. powercut
       // write now.
+#ifndef LOG_PERMANENT_SD_ONLY //SDCARD
       writePLog();
+#endif
+#ifdef MWI_SDCARD //SDCARD
+	  writePLogToSD();
+#endif
+    #endif
+	  #if defined(VOLUME_FLIGHT) || defined(VOLUME_S1) || defined(VOLUME_S2) || defined(VOLUME_S3)
+		  BAROaltHome = alt.EstAlt;
+		  VolumeAltitudeMax = BAROaltHome + VolumeHeightMax;
+		 f.VOLUME_MODE = 0;
     #endif
   }
 }
@@ -828,6 +939,10 @@ void loop () {
   int16_t PTerm = 0,ITerm = 0,DTerm, PTermACC, ITermACC;
   static int16_t lastGyro[2] = {0,0};
   static int16_t errorAngleI[2] = {0,0};
+#if defined(LOG_GPS_POSITION)
+  static uint32_t logGpsTime = 0;
+#endif
+
   #if PID_CONTROLLER == 1
   static int32_t errorGyroI_YAW;
   static int16_t delta1[2],delta2[2];
@@ -847,6 +962,9 @@ void loop () {
   #if defined(SERIAL_RX)
     if (spekFrameFlags == 0x01) readSerial_RX();
   #endif
+#ifdef PCF8591 
+  static uint8_t pcf_delay = 0;
+#endif 
   #if defined(OPENLRSv2MULTI) 
     Read_OpenLRS_RC();
   #endif 
@@ -924,6 +1042,9 @@ void loop () {
           #if BARO
             calibratingB=10;  // calibrate baro to new ground level (10 * 25 ms = ~250 ms non blocking)
           #endif
+		  #if SONAR
+			calibratingS = 10;
+		  #endif
         }
         #if defined(INFLIGHT_ACC_CALIBRATION)  
          else if (rcSticks == THR_LO + YAW_LO + PIT_HI + ROL_HI) {    // Inflight ACC calibration START/STOP
@@ -1074,6 +1195,29 @@ void loop () {
       if (f.ANGLE_MODE || f.HORIZON_MODE) {STABLEPIN_ON;} else {STABLEPIN_OFF;}
     #endif
 
+#if SONAR
+	  if (rcOptions[BOXSONAR]) {
+		  if (f.SONAR_MODE == 0) {
+			  f.SONAR_MODE = 1;
+
+			  AltHold = alt.EstAlt;
+
+#if defined(ALT_HOLD_THROTTLE_MIDPOINT)
+			  initialThrottleHold = ALT_HOLD_THROTTLE_MIDPOINT;
+#else
+			  initialThrottleHold = rcCommand[THROTTLE];
+#endif
+
+			  errorAltitudeI = 0;
+			  BaroPID = 0;
+			  f.THROTTLE_IGNORED = 0;
+		  }
+	  }
+	  else {
+		  f.SONAR_MODE = 0;
+	  }
+#endif
+
     #if BARO
       #if (!defined(SUPPRESS_BARO_ALTHOLD))
         #if GPS 
@@ -1132,6 +1276,13 @@ void loop () {
     #endif
 
     #if GPS
+
+#if defined(VOLUME_FLIGHT) || defined(VOLUME_S1) || defined(VOLUME_S2) || defined(VOLUME_S3) // Wad à corriger
+	  debug[0] = alt.EstAlt;
+	  debug[1] = VolumeAltitudeMax;
+	  debug[2] = GPS_distanceToHome;
+	  debug[3] = f.VOLUME_MODE; //GPS_distanceToHomeMax;
+#endif
     // This handles the three rcOptions boxes 
     // unlike other parts of the multiwii code, it looks for changes and not based on flag settings
     // by this method a priority can be established between gps option
@@ -1141,6 +1292,36 @@ void loop () {
 
     if (f.ARMED ) {                       //Check GPS status and armed
       //TODO: implement f.GPS_Trusted flag, idea from Dramida - Check for degraded HDOP and sudden speed jumps
+#if defined(VOLUME_FLIGHT) || defined(VOLUME_S1) || defined(VOLUME_S2) || defined(VOLUME_S3)
+                  #if defined(VOLUME_FLIGHT_RTH)
+                  if (f.ARMED && ((alt.EstAlt > VolumeAltitudeMax) || (GPS_distanceToHome > GPS_conf.fence)))
+                  #else
+		  if (f.ARMED && ((alt.EstAlt > VolumeAltitudeMax) || (GPS_distanceToHome > GPS_distanceToHomeMax)))
+                  #endif		  
+		  {
+			  f.VOLUME_MODE = 1;
+			
+		  }
+		  else if (f.VOLUME_MODE == 1)
+		  {
+			  if ((VolumeAltitudeMax - 50 > alt.EstAlt) && (GPS_distanceToHomeMax - 2 > GPS_distanceToHome))
+#if defined(VOLUME_FLIGHT_RTH)
+                      if ((VolumeAltitudeMax - 50 > alt.EstAlt) && (GPS_conf.fence*0.75 > GPS_distanceToHome))
+                      #else
+                      if ((VolumeAltitudeMax - 50 > alt.EstAlt) && (GPS_distanceToHomeMax*0.75 > GPS_distanceToHome))
+                      #endif
+                      {
+                          #if defined(VOLUME_FLIGHT_RTH)
+                          f.GPS_mode = GPS_MODE_NONE;
+                          f.GPS_BARO_MODE = false;
+                          f.LAND_IN_PROGRESS = 0;
+                          f.THROTTLE_IGNORED = 0;
+                          GPS_reset_nav();
+#endif
+				  f.VOLUME_MODE = 0;
+                      }
+		  }
+#endif
       if (f.GPS_FIX) {
         if (GPS_numSat >5 ) {
           if (prv_gps_modes != gps_modes_check) {                           //Check for change since last loop
@@ -1230,6 +1411,18 @@ void loop () {
       else {f.PASSTHRU_MODE = 0;}
     #endif
  
+
+
+#ifdef PCF8591 
+   if (pcf_delay == 50) {
+	   pcf_getADC();
+	   pcf_delay = 0;
+	   }
+   	  else {
+		    pcf_delay++;
+			}
+#endif /* PCF8591 */ 
+
   } else { // not in rc loop
     static uint8_t taskOrder=0; // never call all functions in the same loop, to avoid high delay spikes
     switch (taskOrder) {
@@ -1245,11 +1438,15 @@ void loop () {
         #endif
       case 2:
         taskOrder++;
-        #if BARO
-          if (getEstimatedAltitude() != 0) break; // 280 us
+		#if SONAR
+		  Sonar_update(); //debug[2] = sonarAlt;
         #endif    
+		break;
       case 3:
         taskOrder++;
+        #if BARO || SONAR
+          if (getEstimatedAltitude() != 0) break; // 280 us
+        #endif    
         #if GPS
           if (GPS_Compute() != 0) break;  // performs computation on new frame only if present
           #if defined(I2C_GPS)
@@ -1258,9 +1455,7 @@ void loop () {
         #endif
       case 4:
         taskOrder=0;
-        #if SONAR
-          Sonar_update(); //debug[2] = sonarAlt;
-        #endif
+        
         #ifdef LANDING_LIGHTS_DDR
           auto_switch_landing_lights();
         #endif
@@ -1270,6 +1465,19 @@ void loop () {
         break;
     }
   }
+#if defined(LOG_GPS_POSITION) //SDCARD
+  if (currentTime > logGpsTime && f.ARMED == 1 && f.GPS_FIX == 1) {
+	  logGpsTime = currentTime + (LOG_GPS_POSITION * 1000000);
+	  writeGPSLog(GPS_coord[LAT], GPS_coord[LON],
+#if BARO
+		  alt.EstAlt
+#else
+		  0
+#endif
+		  );
+  }
+#endif  
+  
  
   while(1) {
     currentTime = micros();

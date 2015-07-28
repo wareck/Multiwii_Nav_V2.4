@@ -122,6 +122,9 @@
       //#define DROTEK_6DOFv2   // Drotek 6DOF v2
       //#define DROTEK_6DOF_MPU // Drotek 6DOF with MPU6050
       //#define DROTEK_10DOF_MPU//
+      //#define DROTEK_DROFLY_V2//
+      //#define DROTEK_DROFLY_V3// Drotek DroFlyPro "V3" with MPU6050 and MS5611BA
+        #define DROTEK_DROFLY_V3_GPS// Drotek DroFlyPro "V3" with MPU6050 and MS5561BBA +  UBLOX GPS and HMC5883L integrated
       //#define MONGOOSE1_0     // mongoose 1.0    http://store.ckdevices.com/
       //#define CRIUS_LITE      // Crius MultiWii Lite
       //#define CRIUS_SE        // Crius MultiWii SE
@@ -196,6 +199,27 @@
       //#define SRF08
       //#define SRF10
       //#define SRF23
+
+	  // SONAR!! http://www.multiwii.com/forum/viewtopic.php?f=7&t=1033&start=170#p36603
+	  /* Generic sonar: hc-sr04, srf04, dyp-me007, all generic sonar with echo/pulse pin
+		 default pulse is PH6/12, echo is PB4/11
+	  */
+	//#define SONAR_GENERIC_ECHOPULSE                 //Enable fonction
+	#define SONAR_GENERIC_SCALE 58			//scale for ranging conversion (hcsr04 is 58)	
+	#define SONAR_GENERIC_MAX_RANGE 500		//cm (could be more)
+	#define SONAR_GENERIC_TRIGGER_PIN 12		// motor 12
+	#define SONAR_GENERIC_ECHO_PIN 11		// motor 11
+
+	/************************* Sonar alt hold / precision / ground collision keeper *******/
+	#define SONAR_MAX_HOLD 400					//cm, kind of error delimiter, for now to avoid rocket climbing, only usefull if no baro
+
+	//if using baro + sonar       
+	#define SONAR_BARO_FUSION_LC 100			//cm, baro/sonar readings fusion, low cut, below = full sonar
+	#define SONAR_BARO_FUSION_HC SONAR_MAX_HOLD //cm, baro/sonar readings fusion, high cut, above = full baro
+	#define SONAR_BARO_FUSION_RATIO 0.0			//0.0-1.0,  baro/sonar readings fusion, amount of each sensor value, 0 = proportionnel between LC and HC
+	#define SONAR_BARO_LPF_LC 0.9f 
+	#define SONAR_BARO_LPF_HC 0.9f
+
 
       /* ADC accelerometer */ // for 5DOF from sparkfun, uses analog PIN A1/A2/A3
       //#define ADCACC
@@ -596,12 +620,29 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
        for best results. This value is depended from your configuration, AUW and some other params.  Next, after FAILSAFE_OFF_DELAY the copter is disarmed, 
        and motors is stopped. If RC pulse coming back before reached FAILSAFE_OFF_DELAY time, after the small quard time the RC control is returned to normal. */
     //#define FAILSAFE                                // uncomment  to activate the failsafe function
+  //#define FAILSAFE_RTH                              // Not yet Implemented
     #define FAILSAFE_DELAY     10                     // Guard time for failsafe activation after signal lost. 1 step = 0.1sec - 1sec in example
     #define FAILSAFE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
     #define FAILSAFE_THROTTLE  (MINTHROTTLE + 200)    // (*) Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
     
     #define FAILSAFE_DETECT_TRESHOLD  985
 
+ /******** Volume flight settings ********************/
+ /* Volume flight can be used for limiting a flight in defined cylinder volume around the taking of landing.
+  Initially, this code was required for French multiwii user that must be compliant to French air rules.
+  The volume is limited with a defined heigth from the ground and a distance from the taking off point.
+  This option need GPS and Buzzer installed on board!
+  */
+    #define VOLUME_FLIGHT
+    #define VOLUME_FLIGHT_RTH
+    #define VOLUME_HEIGTH_MAX 50
+    #define VOLUME_DISTANCE_MAX 100
+  
+ /* The following defines are related to flying authorizations from to French air administration. */
+    //#define VOLUME_S1 
+    //#define VOLUME_S2
+    //#define VOLUME_S3
+    //#define VOLUME_2KG
 
   /*****************                DFRobot LED RING    *********************************/
     /* I2C DFRobot LED RING communication */
@@ -664,7 +705,7 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
        in NMEA mode the GPS must be configured to output GGA and RMC NMEA sentences (which is generally the default conf for most GPS devices)
        at least 5Hz update rate. uncomment the first line to select the GPS serial port of the arduino */
        
-    //#define GPS_SERIAL 2         // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
+    #define GPS_SERIAL 2         // should be 2 for flyduino v2. It's the serial port number on arduino MEGA
                                    // must be 0 for PRO_MINI (ex GPS_PRO_MINI)
                                    // note: Now a GPS can share MSP on the same port. The only constrain is to not use it simultaneously, and use the same port speed.
 
@@ -679,7 +720,7 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
 
     
     //#define NMEA
-    //#define UBLOX
+      #define UBLOX
     //#define MTK_BINARY16
     //#define MTK_BINARY19
     //#define INIT_MTK_GPS        // initialize MTK GPS for using selected speed, 5Hz update rate and GGA & RMC sentence or binary settings
@@ -703,7 +744,7 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
     #define GPS_LED_INDICATOR
 
    //Enables the MSP_WP command set , which is used by WinGUI for displaying an setting up navigation
-   //#define USE_MSP_WP
+    #define USE_MSP_WP                       
 
    // HOME position is reset at every arm, uncomment it to prohibit it (you can set home position with GyroCalibration)    
    //#define DONT_RESET_HOME_AT_ARM
@@ -878,7 +919,7 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
   /********************************************************************/
   /****                             Buzzer                         ****/
   /********************************************************************/
-    //#define BUZZER
+    #define BUZZER
     //#define RCOPTIONSBEEP         // uncomment this if you want the buzzer to beep at any rcOptions change on channel Aux1 to Aux4
     //#define ARMEDTIMEWARNING 330  // (*) Trigger an alarm after a certain time of being armed [s] to save you lipo (if your TX does not have a countdown)
     //#define PILOTLAMP             //Uncomment if you are using a X-Arcraft Pilot Lamp
@@ -1110,11 +1151,18 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
      *                #failsafe@disarm, #i2c_errs@disarm
      * Enable one or more options to show the log
      */
-    //#define LOG_PERMANENT
+      #define LOG_PERMANENT 4096
     //#define LOG_PERMANENT_SHOW_AT_STARTUP // enable to display log at startup
     //#define LOG_PERMANENT_SHOW_AT_L // enable to display log when receiving 'L'
     //#define LOG_PERMANENT_SHOW_AFTER_CONFIG // enable to display log after exiting LCD config menu
     //#define LOG_PERMANENT_SERVICE_LIFETIME 36000 // in seconds; service alert at startup after 10 hours of armed time
+
+	/* Logging to SDCARD module 
+	*/
+       #define MWI_SDCARD	          // activation of sdcard functionnality, needed for other defines underneath
+       #define LOG_PERMANENT_SD_ONLY     // Disable permanent logging on eeprom
+       #define LOG_GPS_POSITION 2	   // Write GPS position to log. Parameter is the number of seconds between two logs
+       #define CSPIN 53                  // By default : 53 on mega boards, 10 on others. refer to your board specs
 
     /* to add debugging code
        not needed and not recommended for normal operation
@@ -1197,6 +1245,8 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
 /*************************************************************************************************/
 /****           END OF CONFIGURABLE PARAMETERS                                                ****/
 /*************************************************************************************************/
+
+
 
 #endif /* CONFIG_H_ */
 

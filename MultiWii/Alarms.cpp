@@ -85,6 +85,47 @@ void alarmHandler(void){
     else alarmArray[ALRM_FAC_GPS] = ALRM_LVL_OFF;
   #endif
   
+/* 
+Control Config.h configuration and valid choices
+*/  
+
+#if (defined (LOG_PERMANENT_SD_ONLY))|(defined (LOG_GPS_POSITION)) && !(defined(MWI_SDCARD))
+#error "if you had enabled options in SDCARD support you must enable #define MWI_SDCARD"
+#error "Si vous avez activer une option pour la SDCARD vous devez activer #define MWI_SDCARD"
+#error "please check config.h"
+#endif
+
+#if defined (LOG_GPS_POSITION)&&!GPS
+#error"If you wants to use LOG_GPS_POISITION position,you need a GPS..."
+#error"Si vous voulez utiliser LOG_GPS_POSITION vous devez avoir un GPS..."
+#error "please check config.h"
+#endif
+
+#if (defined (MWI_SDCARD))&& !(defined(LOG_PERMANENT))
+#error "If you wants to use SDCARD support, you must enable #define LOG_PERMANENT"
+#error "Si vous voulez utiliser le support SDCARD, vous devez activer #define LOG_PERMANENT"
+#error "please check config.h"
+#endif
+
+#if defined(VOLUME_FLIGHT)||defined(VOLUME_S1)||defined(VOLUME_S2)||defined(VOLUME_S3)
+#if !defined(BUZZER)
+#error "If you want to use VOLUME_FLIGHT you must use a buzzer..."
+#error "Si vous utilisez l'option VOLUME_FLIGHT vous devez activer un buzzer..."
+#error "Please check config.h and #define BUZZER"
+#endif
+
+#if !GPS && (defined(VOLUME_FLIGHT)||defined(VOLUME_S1)||defined(VOLUME_S2)||defined(VOLUME_S3)) 
+#error "If you wants to use VOLUME_FLIGHT, you need a GPS !"
+#error "Si vous voulez utiliser la restriction de vol VOLUME_FLIGHT, vous devez avoir un GPS"
+#error "Please check config.h and GPS configuration"
+#endif
+
+	if (f.VOLUME_MODE == 1 && alarmArray[1] == 0)
+		alarmArray[1] = 1;
+	else if (f.VOLUME_MODE == 0 && alarmArray[1] == 1)
+		alarmArray[1] = 0;
+  #endif
+  
   #if defined(BUZZER)
     if ( rcOptions[BOXBEEPERON] ) alarmArray[ALRM_FAC_BEEPERON] = ALRM_LVL_ON;
     else alarmArray[ALRM_FAC_BEEPERON] = ALRM_LVL_OFF;
@@ -692,12 +733,16 @@ void vario_output(uint16_t d, uint8_t up) {
     uint8_t d1 = d/2;
   #endif
   if (d1<1) d1 = 1;
+  #if defined (LCD_CONF) || defined(LCD_TELEMETRY) || defined(HAS_LCD)
   for (uint8_t i=0; i<d1; i++) LCDprint(s1);
+  #endif
   #ifndef VARIOMETER_SINGLE_TONE
     uint8_t s2 = (up ? 0x07 : 0x05);
     uint8_t d2 = d-d1;
     if (d2<1) d2 = 1;
+#if defined (LCD_CONF) || defined(LCD_TELEMETRY) || defined(HAS_LCD)
     for (uint8_t i=0; i<d2; i++) LCDprint(s2);
+#endif
   #endif
 }
 

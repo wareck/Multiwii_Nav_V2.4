@@ -516,7 +516,9 @@ static void Baro_init() {
   for(uint8_t i=0;i<6;i++) {
     i2c_rep_start(MS561101BA_ADDRESS<<1);
     i2c_write(0xA2+2*i);
+    delay(10);
     i2c_rep_start((MS561101BA_ADDRESS<<1) | 1);//I2C read direction => 1
+    delay(10);
     data.raw[1] = i2c_readAck();  // read a 16 bit register
     data.raw[0] = i2c_readNak();
     ms561101ba_ctx.c[i+1] = data.val;
@@ -556,6 +558,7 @@ static void i2c_MS561101BA_Calculate() {
     off  -= delt>>1; 
     sens -= delt>>2;
   }
+ baroTemperature  += 2000;
   baroPressure     = (( (ms561101ba_ctx.up * sens ) /((uint32_t)1<<21)) - off)/((uint32_t)1<<15);
 }
 
@@ -583,8 +586,12 @@ uint8_t Baro_update() {                          // first UT conversion is start
   i2c_MS561101BA_UT_or_UP_Read(rawValPointer);     // get the 24bit resulting from a UP of UT command request. Nothing interresting for the first cycle because we don't initiate a command in Baro_init()
   i2c_MS561101BA_UT_or_UP_Start(commandRegister);  // send the next command to get UP or UT value after at least 8.5ms
   return 1;
+ 
 }
 #endif
+
+
+
 
 // ************************************************************************************************************
 // I2C Accelerometer MMA7455 
@@ -1511,9 +1518,71 @@ void Sonar_update() {
   sonarAlt = srf08_ctx.range[0]; // only one sensor considered for the moment
 }
 #else
+#if defined(SONAR_GENERIC_ECHOPULSE)
+// ************************************************************************************************************
+// Generic Sonar Support
+// ************************************************************************************************************
+volatile unsigned long SONAR_GEP_startTime = 0;
+volatile unsigned long SONAR_GEP_echoTime = 0;
+volatile static int32_t  tempSonarAlt = 0;
+
+void Sonar_init() {
+	SONAR_GEP_EchoPin_PCICR;
+	SONAR_GEP_EchoPin_PCMSK;
+	SONAR_GEP_EchoPin_PINMODE_IN;
+	SONAR_GEP_TriggerPin_PINMODE_OUT;
+}
+
+void Sonar_update() {
+	sonarAlt = 1 + tempSonarAlt;
+	SONAR_GEP_TriggerPin_PIN_LOW;
+	delayMicroseconds(2);
+	SONAR_GEP_TriggerPin_PIN_HIGH;
+	delayMicroseconds(10);
+	SONAR_GEP_TriggerPin_PIN_LOW;
+}
+
+ISR(SONAR_GEP_EchoPin_PCINT_vect) {
+	if (SONAR_GEP_EchoPin_PIN & (1 << SONAR_GEP_EchoPin_PCINT)) {
+		SONAR_GEP_startTime = micros();
+	}
+	else {
+		SONAR_GEP_echoTime = micros() - SONAR_GEP_startTime;
+		if (SONAR_GEP_echoTime <= SONAR_GENERIC_MAX_RANGE*SONAR_GENERIC_SCALE)
+			tempSonarAlt = SONAR_GEP_echoTime / SONAR_GENERIC_SCALE;
+		else
+			tempSonarAlt = -1;
+	}
+}
+#else
 inline void Sonar_init() {}
 void Sonar_update() {}
 #endif
+#endif
+
+// **************************************************************************** 
+// I2C ADC PCF8591 
+// **************************************************************************** 
+#ifdef PCF8591 
+#define PCF8591_ADDRESS 0x48 
+
+void pcf_getADC(void) {
+		uint8_t *b = (uint8_t *)&pcf8591;
+		TWBR = ((F_CPU / 100000) - 16) / 2;    // set the I2C clock rate to 100kHz 
+		/* Set auto increment bit */
+		i2c_rep_start(PCF8591_ADDRESS << 1);
+		i2c_write(0x04);
+		i2c_stop();
+		/* Read the four channels */
+		i2c_rep_start((PCF8591_ADDRESS << 1) | 1);
+		i2c_read(1); // Trigger the conversion 
+		* b++ = i2c_read(1);
+		* b++ = i2c_read(1);
+		* b++ = i2c_read(1);
+		* b = i2c_read(0);
+		TWBR = ((F_CPU / 400000) - 16) / 2;    // back to 400kHz 
+}
+#endif /* PCF8591 */ 
 
 
 void initS() {

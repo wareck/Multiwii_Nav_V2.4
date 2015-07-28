@@ -44,7 +44,7 @@
 
 #define MSP_NAV_STATUS           121   //out message         Returns navigation status
 #define MSP_NAV_CONFIG           122   //out message         Returns navigation parameters
-
+#define MSP_PCF8591              123   //out message         ADC values
 #define MSP_CELLS                130   //out message         FRSKY Battery Cell Voltages
 
 #define MSP_SET_RAW_RC           200   //in message          8 rc chan
@@ -468,6 +468,13 @@ void evaluateCommand(uint8_t c) {
     case MSP_SERVO_CONF:
       s_struct((uint8_t*)&conf.servoConf[0].min,56); // struct servo_conf_ is 7 bytes length: min:2 / max:2 / middle:2 / rate:1    ----     8 servo =>  8x7 = 56
       break;
+
+   #ifdef PCF8591 
+   case MSP_PCF8591:
+	s_struct((uint8_t*)&pcf8591, 4);
+    break;
+   #endif 
+
     case MSP_SET_SERVO_CONF:
       mspAck();
       s_struct_w((uint8_t*)&conf.servoConf[0].min,56);

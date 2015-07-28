@@ -865,6 +865,11 @@
   #define HW_PWM_SERVOS
 #endif
 
+#if defined(MWI_SDCARD)
+#define LOGFILE_GPS 0
+#define LOGFILE_PERM 1
+#endif
+
 
 /**************************************************************************************/
 /***************      IMU Orientations and Sensor definitions      ********************/
@@ -1198,6 +1203,56 @@
   #undef INTERNAL_I2C_PULLUPS
 #endif
 
+#if defined(DROTEK_DROFLY_V2)
+#if defined PILOTLAMP
+#define BUZZERPIN_PINMODE          pinMode (11, OUTPUT);
+#define    PL_PIN_ON    PORTB |= 1<<5;
+#define    PL_PIN_OFF   PORTB &= ~(1<<5);
+#else
+#define BUZZERPIN_PINMODE          pinMode (11, OUTPUT);
+#define BUZZERPIN_ON               PORTB |= 1<<5;
+#define BUZZERPIN_OFF              PORTB &= ~(1<<5);
+#endif 
+#define MPU6050
+#define HMC5883
+#define MS561101BA
+#define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  =  Y; imu.accADC[PITCH]  = -X; imu.accADC[YAW]  = Z;}
+#define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  X; imu.gyroADC[PITCH] = Y; imu.gyroADC[YAW] = -Z;}
+#define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  -Y; imu.magADC[PITCH]  = X; imu.magADC[YAW]  = -Z;}
+#define MPU6050_ADDRESS 0X69
+#define MPU6050_I2C_AUX_MASTER // MAG connected to the AUX I2C bus of MPU6050
+#undef INTERNAL_I2C_PULLUPS
+#endif
+
+#if defined(DROTEK_DROFLY_V3)||defined (DROTEK_DROFLY_V3_GPS) 
+#define MPU6050
+#define MS561101BA
+#define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  =  Y; imu.accADC[PITCH]  = -X; imu.accADC[YAW]  = Z;}
+#define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  X; imu.gyroADC[PITCH] = Y; imu.gyroADC[YAW] = -Z;}
+#if defined (DROTEK_DROFLY_V3_GPS) 
+#define HMC5883
+#define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  -Y; imu.magADC[PITCH]  = -X; imu.magADC[YAW]  = Z;}
+#endif
+#define MPU6050_ADDRESS 0X69
+#undef INTERNAL_I2C_PULLUPS
+#define LEDPIN_PINMODE             pinMode (13, OUTPUT);pinMode (30, OUTPUT);
+#define LEDPIN_TOGGLE              PINB  |= (1<<7); PINC  |= (1<<7);
+#define LEDPIN_ON                  PORTB |= (1<<7); PORTC |= (1<<7);
+#define LEDPIN_OFF                 PORTB &= ~(1<<7);PORTC &= ~(1<<7);
+#define STABLEPIN_PINMODE          pinMode (30, OUTPUT);
+#define STABLEPIN_ON               PORTC |= 1<<7;
+#define STABLEPIN_OFF              PORTC &= ~(1<<7);
+#if defined PILOTLAMP
+#define BUZZERPIN_PINMODE          pinMode (11, OUTPUT);
+#define    PL_PIN_ON    PORTB |= 1<<5;
+#define    PL_PIN_OFF   PORTB &= ~(1<<5);
+#else
+#define BUZZERPIN_PINMODE          pinMode (11, OUTPUT);
+#define BUZZERPIN_ON               PORTB |= 1<<5;
+#define BUZZERPIN_OFF              PORTB &= ~(1<<5);
+#endif 
+#endif
+
 #if defined(FLYDUINO_MPU)
   #define MPU6050
   #define ACC_ORIENTATION(X, Y, Z) {imu.accADC[ROLL] = X; imu.accADC[PITCH] = Y; imu.accADC[YAW] = Z;}
@@ -1240,6 +1295,17 @@
   #define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = -X; imu.accADC[PITCH]  = -Y; imu.accADC[YAW]  =  Z;}
   #define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  Y; imu.gyroADC[PITCH] = -X; imu.gyroADC[YAW] = -Z;}
   #define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  = -Z;}
+#endif
+
+#if defined(RCTIMER_CRIUS_SE_v2_0)
+#define MPU6050
+#define HMC5883
+#define MS561101BA
+#define ACC_ORIENTATION(X, Y, Z)  {imu.accADC[ROLL]  = -X; imu.accADC[PITCH]  = -Y; imu.accADC[YAW]  =  Z;}
+#define GYRO_ORIENTATION(X, Y, Z) {imu.gyroADC[ROLL] =  Y; imu.gyroADC[PITCH] = -X; imu.gyroADC[YAW] = -Z;}
+#define MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  = -Z;}
+
+//#define MS561101BA_ADDRESS 0x76
 #endif
 
 #if defined(BOARD_PROTO_1)
@@ -1503,6 +1569,14 @@
   #define SERVO_3_PINMODE            pinMode(38,OUTPUT);        // CAM TRIG
   #define SERVO_3_PIN_HIGH           PORTL |= 1<<3;
   #define SERVO_3_PIN_LOW            PORTL &= ~(1<<3);
+#define BUZZERPIN_PINMODE          pinMode (31, OUTPUT);
+#if defined PILOTLAMP
+#define    PL_PIN_ON    PORTC |= 1<<6;
+#define    PL_PIN_OFF   PORTC &= ~(1<<6);
+#else
+#define BUZZERPIN_ON               PORTC |= 1<<6;
+#define BUZZERPIN_OFF              PORTC &= ~(1<<6);
+#endif
 #endif
 
 #if defined(FLYDU_ULTRA)
@@ -1678,7 +1752,7 @@
   #define NAVCAP 0
 #endif
 
-#if defined(SRF02) || defined(SRF08) || defined(SRF10) || defined(SRC235) || defined(I2C_GPS_SONAR)
+#if defined(SRF02) || defined(SRF08) || defined(SRF10) || defined(SRC235) || defined(I2C_GPS_SONAR) || defined(SONAR_GENERIC_ECHOPULSE)
   #define SONAR 1
 #else
   #define SONAR 0
@@ -1905,6 +1979,17 @@
 /***************               override defaults                   ********************/
 /**************************************************************************************/
 
+/*************** volume flight pre-defined scenarios ********************/
+
+
+#if defined(VOLUME_S1) || defined(VOLUME_S2) || defined(VOLUME_S3)
+ #define VOLUME_S1_DSTMAX 100
+ #define VOLUME_S2_DSTMAX 1000
+ #define VOLUME_S3_DSTMAX 100
+ #define VOLUME_HMAX_2KG 150
+ #define VOLUME_HMAX 50
+#endif
+
   /***************               pin assignments ?  ********************/
   #ifdef OVERRIDE_V_BATPIN
     #undef V_BATPIN
@@ -1999,5 +2084,21 @@
     defined( ITG3200_LPF_20HZ)  || defined( ITG3200_LPF_10HZ)
   #error "you use one feature that is no longer supported or has undergone a name change"
 #endif
+
+#pragma region GENERIC SONAR SUPPORT
+#if defined(SONAR_GENERIC_ECHOPULSE)
+#define SONAR_GEP_TriggerPin             SONAR_GENERIC_TRIGGER_PIN
+#define SONAR_GEP_TriggerPin_PINMODE_OUT pinMode(SONAR_GEP_TriggerPin,OUTPUT);
+#define SONAR_GEP_TriggerPin_PIN_HIGH    PORTB |= 1<<6;
+#define SONAR_GEP_TriggerPin_PIN_LOW     PORTB &= ~(1<<6);
+#define SONAR_GEP_EchoPin                SONAR_GENERIC_ECHO_PIN
+#define SONAR_GEP_EchoPin_PINMODE_IN     pinMode(SONAR_GEP_EchoPin,INPUT);
+#define SONAR_GEP_EchoPin_PCINT          PCINT5
+#define SONAR_GEP_EchoPin_PCICR          PCICR |= (1<<PCIE0); // PCINT 0-7 belong to PCIE0
+#define SONAR_GEP_EchoPin_PCMSK          PCMSK0 = (1<<SONAR_GEP_EchoPin_PCINT); // Mask Pin PCINT5 - all other PIns PCINT0-7 are not allowed to create interrupts!
+#define SONAR_GEP_EchoPin_PCINT_vect     PCINT0_vect  // PCINT0-7 belog PCINT0_vect
+#define SONAR_GEP_EchoPin_PIN            PINB  // PCINT0-7 belong to PINB
+#endif
+#pragma endregion
 
 #endif /* DEF_H_ */

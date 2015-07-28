@@ -9,6 +9,7 @@ void writeParams(uint8_t b);
 void LoadDefaults();
 void readPLog(void);
 void writePLog(void);
+uint8_t calculate_sum(uint8_t *cb, uint8_t siz);
 
 #if defined(GPS)
 //EEPROM functions for storing and restoring waypoints 
@@ -21,6 +22,7 @@ uint8_t getMaxWPNumber(void);  // Returns the maximum WP number that can be stor
 void loadGPSdefaults(void);
 void writeGPSconf(void) ;
 bool recallGPSconf(void);
+
 #endif
 
 #endif /* EEPROM_H_ */

@@ -4,6 +4,7 @@
 #include "def.h"
 #include "types.h"
 #include "EEPROM.h"
+#include "SDcard.h"
 #include "MultiWii.h"
 #include "Alarms.h"
 #include "GPS.h"
@@ -215,6 +216,7 @@ void LoadDefaults() {
 }
 
 #ifdef LOG_PERMANENT
+#ifndef LOG_PERMANENT_SD_ONLY
 void readPLog(void) {
   eeprom_read_block((void*)&plog, (void*)(E2END - 4 - sizeof(plog)), sizeof(plog));
   if(calculate_sum((uint8_t*)&plog, sizeof(plog)) != plog.checksum) {
@@ -231,6 +233,7 @@ void writePLog(void) {
   plog.checksum = calculate_sum((uint8_t*)&plog, sizeof(plog));
   eeprom_write_block((const void*)&plog, (void*)(E2END - 4 - sizeof(plog)), sizeof(plog));
 }
+#endif
 #endif
 
 #if GPS

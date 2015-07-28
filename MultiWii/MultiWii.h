@@ -21,6 +21,9 @@ extern uint16_t cycleTime;
 extern uint16_t calibratingA;
 extern uint16_t calibratingB;
 extern uint16_t calibratingG;
+#if SONAR
+extern uint16_t calibratingS;
+#endif
 extern int16_t  magHold,headFreeModeHold;
 extern uint8_t  vbatMin;
 extern uint8_t  rcOptions[CHECKBOXITEMS];
@@ -28,6 +31,14 @@ extern int32_t  AltHold;
 extern int16_t  sonarAlt;
 extern int16_t  BaroPID;
 extern int16_t  errorAltitudeI;
+#ifdef PCF8591 
+extern pcf8591_t pcf8591;
+#endif /* PCF8591 */ 
+
+#if defined(VOLUME_FLIGHT) || defined(VOLUME_S1) || defined(VOLUME_S2) || defined(VOLUME_S3)
+extern uint16_t VolumeAltitudeMax;
+extern uint16_t VolumeHeightMax;
+#endif
 
 extern int16_t  i2c_errors_count;
 extern uint8_t alarmArray[ALRM_FAC_SIZE];
