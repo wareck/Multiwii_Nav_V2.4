@@ -2042,7 +2042,7 @@
 /**************************************************************************************/
 
 #ifndef NUMBER_MOTOR
-        #error "NUMBER_MOTOR is not set, most likely you have not defined any type of multicopter"
+        #error "NUMBER_MOTOR is not set, most likely you have not defined any type of multicopter in config.h"
 #endif
 
 #if (defined(LCD_DUMMY) || defined(LCD_SERIAL3W) || defined(LCD_TEXTSTAR) || defined(LCD_VT100) || defined(LCD_TTY) || defined(LCD_ETPP) || defined(LCD_LCD03) || defined(LCD_LCD03S) || defined(OLED_I2C_128x64) ) || defined(OLED_DIGOLE)
