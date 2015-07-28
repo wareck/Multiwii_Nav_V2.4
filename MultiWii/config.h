@@ -36,7 +36,7 @@
     //#define BI
     //#define TRI
     //#define QUADP
-      #define QUADX
+    //#define QUADX
     //#define Y4
     //#define Y6
     //#define HEX6
@@ -60,7 +60,7 @@
     //#define MINTHROTTLE 1120 // for Super Simple ESCs 10A
     //#define MINTHROTTLE 1064 // special ESC (simonk)
     //#define MINTHROTTLE 1050 // for brushed ESCs like ladybird
-    #define MINTHROTTLE 1150 // (*) (**)
+      #define MINTHROTTLE 1150 // (*) (**)
 
   /****************************    Motor maxthrottle    *******************************/
     /* this is the maximum value for the ESCs at full power, this value can be increased up to 2000 */
@@ -200,15 +200,15 @@
       //#define SRF10
       //#define SRF23
 
-	  // SONAR!! http://www.multiwii.com/forum/viewtopic.php?f=7&t=1033&start=170#p36603
+          // SONAR!! http://www.multiwii.com/forum/viewtopic.php?f=7&t=1033&start=170#p36603
 	  /* Generic sonar: hc-sr04, srf04, dyp-me007, all generic sonar with echo/pulse pin
 		 default pulse is PH6/12, echo is PB4/11
 	  */
-	//#define SONAR_GENERIC_ECHOPULSE                 //Enable fonction
-	#define SONAR_GENERIC_SCALE 58			//scale for ranging conversion (hcsr04 is 58)	
-	#define SONAR_GENERIC_MAX_RANGE 500		//cm (could be more)
-	#define SONAR_GENERIC_TRIGGER_PIN 12		// motor 12
-	#define SONAR_GENERIC_ECHO_PIN 11		// motor 11
+      //#define SONAR_GENERIC_ECHOPULSE                 //Enable fonction
+        #define SONAR_GENERIC_SCALE 58			//scale for ranging conversion (hcsr04 is 58)	
+        #define SONAR_GENERIC_MAX_RANGE 500		//cm (could be more)
+        #define SONAR_GENERIC_TRIGGER_PIN 12		// motor 12
+        #define SONAR_GENERIC_ECHO_PIN 11		// motor 11
 
 	/************************* Sonar alt hold / precision / ground collision keeper *******/
 	#define SONAR_MAX_HOLD 400					//cm, kind of error delimiter, for now to avoid rocket climbing, only usefull if no baro
@@ -620,7 +620,6 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
        for best results. This value is depended from your configuration, AUW and some other params.  Next, after FAILSAFE_OFF_DELAY the copter is disarmed, 
        and motors is stopped. If RC pulse coming back before reached FAILSAFE_OFF_DELAY time, after the small quard time the RC control is returned to normal. */
   //#define FAILSAFE                                // uncomment  to activate the failsafe function
-  //#define FAILSAFE_RTH                              // Not yet Implemented
     #define FAILSAFE_DELAY     10                     // Guard time for failsafe activation after signal lost. 1 step = 0.1sec - 1sec in example
     #define FAILSAFE_OFF_DELAY 200                    // Time for Landing before motors stop in 0.1sec. 1 step = 0.1sec - 20sec in example
     #define FAILSAFE_THROTTLE  (MINTHROTTLE + 200)    // (*) Throttle level used for landing - may be relative to MINTHROTTLE - as in this case
