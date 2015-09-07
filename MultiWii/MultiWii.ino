@@ -41,6 +41,7 @@ Modification done by Olivier FERNANDEZ wareck@gmail.com:
 -French conversion for some compilation error code
 -Add restriction volume Fly RTH function (thanks to the wadudu Team !)
 -Add Generic pulse Sonar support (SR04)
+-Autoland on battery fail feature
 
 
 ----------------------------------------------------------------
@@ -59,9 +60,9 @@ Modification apportées par Olivier FERNANDEZ wareck@gmail.com
 -Ajout d'option permettant au code de fonctionner sans GPS
 -Utilisation possible d'inter 6 poisitions pour les voies AUX
 -Traduction en français des messages d'aletre lors de la compilation
--Ajout de la fonction RTH en cas de depassement de la zone de vol (merci la team ! )
--Ajout du support des Sonar Generic (SR04) 
-
+-Ajout de la fonction RTH en cas de depassement de la zone de vol (merci la team wadudu! )
+-Ajout du support des Sonar Generic (SR04)
+-Fonction Autoland en cas de batterie vide
 */
 					 
 

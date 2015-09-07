@@ -114,6 +114,11 @@ Control Config.h configuration and valid choices
 #error "Please check config.h and #define BUZZER"
 #endif
 
+
+#if defined (VBAT) && defined (VBAT_ALAND) && !GPS 
+#error "Unfortunatly GPS is needed for using VBAT_ALAND"
+#endif
+
 #if !GPS && (defined(VOLUME_FLIGHT)||defined(VOLUME_S1)||defined(VOLUME_S2)||defined(VOLUME_S3)) 
 #error "If you wants to use VOLUME_FLIGHT, you need a GPS !"
 #error "Si vous voulez utiliser la restriction de vol VOLUME_FLIGHT, vous devez avoir un GPS"

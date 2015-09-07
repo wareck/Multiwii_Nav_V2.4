@@ -153,6 +153,10 @@ typedef struct {
   uint8_t SONAR_MODE : 1;
 #endif
 
+#if defined (VBAT) && defined (VBAT_ALAND)
+  uint8_t VBAT_AUTOLAND : 1;
+#endif
+
 #ifdef MWI_SDCARD //SDCARD
   uint8_t SDCARD : 1;
 #endif

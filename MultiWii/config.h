@@ -931,7 +931,7 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
        with R1=33k and R2=51k
        vbat = [0;1023]*16/VBATSCALE
        must be associated with #define BUZZER ! */
-    //#define VBAT              // uncomment this line to activate the vbat code
+    #define VBAT              // uncomment this line to activate the vbat code
     #define VBATSCALE       131 // (*) (**) change this value if readed Battery voltage is different than real voltage
     #define VBATNOMINAL     126 // 12,6V full battery nominal voltage - only used for lcd.telemetry
     #define VBATLEVEL_WARN1 107 // (*) (**) 10,7V
@@ -939,6 +939,8 @@ Also note, that maqgnetic declination changes with time, so recheck your value e
     #define VBATLEVEL_CRIT   93 // (*) (**) 9.3V - critical condition: if vbat ever goes below this value, permanent alarm is triggered
     #define NO_VBAT          16 // Avoid beeping without any battery
     #define VBAT_OFFSET       0 // offset in 0.1Volts, gets added to voltage value  - useful for zener diodes
+	#define VBAT_ALAND         // when bat reach VBATLEVEL2_WARN copter, autolanding
+	#define VBAT_ALAND_CNT    3 // Number of Bat Warning level 2 heared before activate autoland
 
     /* for V BAT monitoring of individual cells
      * enable both VBAT and VBAT_CELLS
